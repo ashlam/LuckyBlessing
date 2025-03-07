@@ -1,0 +1,62 @@
+<view class="container">
+  <view class="lottery-type">
+    <picker mode="selector" range="{{lotteryTypes}}" bindchange="changeLotteryType" disabled="{{isGenerated}}">
+      <button disabled="{{isGenerated}}">彩票类型：{{lotteryTypes[selectedType]}}</button>
+    </picker>
+    
+    <!-- 模式选择器添加禁用状态 -->
+    <picker mode="selector" range="{{modeOptions}}" bindchange="changeMode" disabled="{{isGenerated}}">
+      <button disabled="{{isGenerated}}">当前模式：{{modeOptions[selectedMode]}}</button>
+    </picker>
+  </view>
+
+  <view class="upload-section">
+    <button bindtap="chooseImage" disabled="{{isGenerated}}">选择图片</button>
+  </view>
+
+  <view class="image-section">
+    <image src="{{imagePath}}" mode="aspectFit" style="width: 200px; height: 200px;"></image>
+  </view>
+
+  <view class="result-section">
+    <!-- 修改前 -->
+    <view class="blessing">{{blessing}}</view>
+    <!-- 修改后 -->
+    <view class="date-section">
+      <view class="solar-date">{{dateInfo.solarDate}}</view>
+      <view class="week-day">{{dateInfo.weekDay}}</view>
+      <view class="lunar-date">{{dateInfo.lunarDate}}</view>
+    </view>
+    <view class="numbers" wx:if="{{isGenerated}}"> <!-- 添加条件渲染 -->
+      <!-- 在号码显示部分添加倍数 -->
+      <block wx:for="{{numbers}}" wx:key="index">
+        <view>
+          第 {{index + 1}} 组:
+          <block wx:for="{{item.redBalls}}" wx:key="index">
+            <text style="color: red;">{{item}} </text>
+          </block>
+          +
+          <block wx:for="{{item.blueBalls}}" wx:key="index">
+            <text style="color: blue;">{{item}} </text>
+          </block>
+          <text wx:if="{{selectedMode === 1}}" style="color: green; margin-left: 10px;">{{item.multiplier}}倍</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="export-section">
+    <view class="btn-group">
+      <button bindtap="exportResult" disabled="{{!isGenerated}}">导出</button>
+      <button bindtap="reset" style="margin-left: 20px;">重置</button>
+    </view>
+  </view>
+</view>
+
+<!-- 在模式选择器下方添加倍数选择器 -->
+<!-- 倍数选择器添加禁用状态 -->
+<view wx:if="{{selectedMode === 1}}" class="multiplier-selector">
+  <picker mode="selector" range="{{multiplierOptions}}" bindchange="changeMultiplier" disabled="{{isGenerated}}">
+    <button disabled="{{isGenerated}}">总倍数：{{multiplierOptions[selectedMultiplier]}}</button>
+  </picker>
+</view>

@@ -1,0 +1,52 @@
+.container {
+  padding: 20px;
+  text-align: center;
+}
+
+.lottery-type, .upload-section {
+  margin-bottom: 20px;
+}
+
+.image-section {
+  margin-bottom: 20px;
+}
+
+.blessing {
+  font-size: 18px;
+  color: green;
+  margin-bottom: 10px;
+}
+
+.date-info {
+  font-size: 12px;
+  color: red;
+  margin-bottom: 10px;
+}
+
+.numbers {
+  font-size: 14px;
+  color: black;
+}
+
+.multiplier-selector {
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.date-section {
+  text-align: center;
+  margin: 10px 0;
+  font-size: 14px;
+}
+.solar-date {
+  font-weight: bold;
+}
+.lunar-date {
+  color: #666;
+}
+.btn-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
