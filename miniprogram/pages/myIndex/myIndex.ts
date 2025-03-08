@@ -13,35 +13,14 @@ declare module 'lunar' {
 
 // 引入农历计算库
 const lunarCalendar = require('../../libs/lunar.js');
-
-
-// 随机数生成器
-class Random {
-  constructor(seed) {
-    this.seed = this.hashCode(seed); // 将种子转换为哈希值
-  }
-
-  // 计算字符串的哈希值
-  hashCode(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash |= 0; // 转换为 32 位整数
-    }
-    return hash;
-  }
-
-  // 生成随机数（0 到 1 之间）
-  random() {
-    const x = Math.sin(this.seed++) * 10000;
-    return x - Math.floor(x);
-  }
-
-  // 生成指定范围的随机整数
-  randInt(min, max) {
-    return Math.floor(this.random() * (max - min + 1)) + min;
-  }
-}
+import { 
+  getDateInfo,
+  getLunarDayName,
+  getLunarMonthName 
+} from './dateUtils'; // 新增日期工具导入
+import { Random } from './randomService';
+import { generateLotteryNumbers } from './lotteryService'; // 新增导入
+import type { LotteryConfig } from './types'; 
 
 // 在 data 部分新增配置项
 Page({
@@ -80,74 +59,6 @@ Page({
       return blessings[this.random.randInt(0, blessings.length - 1)];
     },
   
-    // 添加日期信息生成
-    // 修改 getDateInfo 方法
-    getDateInfo(date) {
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      
-      // 获取星期（0-6对应周日到周六）
-      const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
-      const weekDay = weekDays[date.getDay()];
-      
-      const lunar = lunarCalendar.solarToLunar(year, month, day);
-      
-      // 根据源码实际返回结构验证
-      if (!lunar || typeof lunar.lunarMonth !== 'number' || typeof lunar.lunarDay !== 'number') {
-        console.error('农历数据异常', lunar);
-        return {
-          solarDate: `${year}年${month}月${day}日`,
-          weekDay: `星期${weekDay}`,
-          lunarDate: '农历数据异常'
-        };
-      }
-
-      // 调整月份处理（源码中lunarMonth是真实月份，1=正月）
-      const adjustedMonth = lunar.lunarMonth;
-      const isLeap = lunar.lunarLeapMonth === adjustedMonth;
-      const monthStr = isLeap ? `闰${this.getLunarMonthName(adjustedMonth)}` : this.getLunarMonthName(adjustedMonth);
-      
-      return {
-        solarDate: `${year}年${month}月${day}日`,
-        weekDay: `星期${weekDay}`,
-        lunarDate: `农历${monthStr}${this.getLunarDayName(lunar.lunarDay)}` // 修改日显示方式
-      };
-    },
-
-    // 新增农历日转换方法
-    getLunarDayName(day) {
-      const units = ['','一','二','三','四','五','六','七','八','九','十'];
-      const tens = ['初','十','廿','卅'];
-      let res = '';
-      
-      if(day > 30) return '未知';
-      if(day === 10) return '初十';
-      
-      res = tens[Math.floor(day/10)];
-      res += units[day%10] || '';
-      
-      // 特殊处理
-      if(day === 20) res = '二十';
-      if(day === 30) res = '三十';
-      
-      return res + (res ? '日' : '');
-    },
-
-    // 修改农历月份转换方法
-    getLunarMonthName(month) {
-      const names = ['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
-      return names[month - 1] || '';
-    },
-  
-    generateRandomNumbers(count, min, max) {
-      const numbers = [];
-      while(numbers.length < count) {
-        const num = this.random.randInt(min, max);
-        if(!numbers.includes(num)) numbers.push(num);
-      }
-      return numbers.sort((a, b) => a - b);
-    },  // ← 确保这个逗号存在
   
     // 修改 processImage 方法中的测试代码
     processImage(filePath, seed) {
@@ -158,7 +69,7 @@ Page({
   
       // 替换版本检测为功能测试
       const testDate = new Date('2024-02-10'); // 测试龙年春节
-      console.log('测试春节转换结果:', this.getDateInfo(testDate));
+      console.log('测试春节转换结果:', getDateInfo(testDate));
   
       setTimeout(() => {
         const today = new Date();
@@ -178,7 +89,7 @@ Page({
         // 生成界面数据
         this.setData({
           blessing: this.generateBlessing(),
-          dateInfo: this.getDateInfo(today), // 现在返回对象
+          dateInfo: getDateInfo(today), // 改为直接调用
           numbers: this.generateLotteryNumbers(),
           isGenerated: true,
           currentSeed: fullSeed
@@ -243,51 +154,15 @@ Page({
     }
   },
   // 修改 generateLotteryNumbers 方法
+  // 修改后的generateLotteryNumbers方法（约211-219行）
   generateLotteryNumbers() {
-    const type = this.data.lotteryTypes[this.data.selectedType];
-    const numbers = [];
-    
-    // 根据模式确定组数
-    const totalGroups = this.data.selectedMode === 1 ? 
-      this.random.randInt(1, 5) : 5; // 单倍模式固定5组
-
-    // 计算总倍数（仅在倍数模式生效）
-    let totalMultiplier = 1;
-    if (this.data.selectedMode === 1) {
-      const multiplierMap = {0: 2, 1: 5, 2:10, 3:25, 4:50};
-      totalMultiplier = multiplierMap[this.data.selectedMultiplier];
-    }
-
-    // 分配倍数逻辑（仅在倍数模式）
-    let remaining = totalMultiplier;
-    for (let i = 0; i < totalGroups; i++) {
-      let currentMultiplier = 1;
-      if (this.data.selectedMode === 1) {
-        currentMultiplier = i === totalGroups - 1 ? 
-          remaining : this.random.randInt(1, remaining - (totalGroups - i - 1));
-        remaining -= currentMultiplier;
-      }
-
-      if (type === '双色球') {
-        const redBalls = this.generateRandomNumbers(6, 1, 33).map(num => num.toString().padStart(2, '0'));
-        const blueBall = this.generateRandomNumbers(1, 1, 16).map(num => num.toString().padStart(2, '0'));
-        numbers.push({
-          redBalls: redBalls,
-          blueBalls: blueBall,
-          multiplier: currentMultiplier
-        });
-      } else {
-        // 添加缺失的变量定义
-        const frontBalls = this.generateRandomNumbers(5, 1, 35).map(num => num.toString().padStart(2, '0'));
-        const backBalls = this.generateRandomNumbers(2, 1, 12).map(num => num.toString().padStart(2, '0'));
-        numbers.push({
-            redBalls: frontBalls,
-            blueBalls: backBalls,
-            multiplier: currentMultiplier
-        });
-      }
-    }
-    return numbers;
+    const config = {
+      selectedType: this.data.selectedType,
+      selectedMode: this.data.selectedMode,
+      selectedMultiplier: this.data.selectedMultiplier,
+      currentSeed: this.data.currentSeed
+    };
+    return generateLotteryNumbers(this.random, config);
   },
   // 在Page对象中添加reset方法
   reset() {
