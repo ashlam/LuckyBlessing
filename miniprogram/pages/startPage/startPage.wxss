@@ -1,0 +1,23 @@
+.container {
+  padding: 40rpx;
+  text-align: center;
+}
+
+.title {
+  font-size: 48rpx;
+  color: #2d8cf0;
+  margin: 100rpx 0 40rpx;
+}
+
+.description {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 80rpx;
+}
+
+.start-btn {
+  width: 60%;
+  background: #2d8cf0;
+  color: white;
+  border-radius: 50rpx;
+}

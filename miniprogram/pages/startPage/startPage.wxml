@@ -1,0 +1,5 @@
+<view class="container">
+  <view class="title">幸运祝福生成器</view>
+  <view class="description">点击下方按钮开始生成您的专属幸运祝福</view>
+  <button class="start-btn" bindtap="goToMain">立即开始</button>
+</view>

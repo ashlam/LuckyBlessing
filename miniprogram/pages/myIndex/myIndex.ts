@@ -1,5 +1,19 @@
+// 在Page({}) 之前添加类型声明
+interface NumberItem {
+  redBalls: string[];
+  blueBalls: string[];
+  multiplier: number;
+}
+
+// 使用全局声明来避免相对模块名问题
+declare module 'lunar' {
+  // 这里可以添加模块的具体类型声明
+  export function solarToLunar(year: number, month: number, day: number): any;
+}
+
 // 引入农历计算库
 const lunarCalendar = require('../../libs/lunar.js');
+
 
 // 随机数生成器
 class Random {
@@ -228,7 +242,6 @@ Page({
       this.processImage(this.data.imagePath, this.data.originalSeed);
     }
   },
-
   // 修改 generateLotteryNumbers 方法
   generateLotteryNumbers() {
     const type = this.data.lotteryTypes[this.data.selectedType];
@@ -276,7 +289,6 @@ Page({
     }
     return numbers;
   },
-
   // 在Page对象中添加reset方法
   reset() {
     this.setData({
@@ -288,34 +300,45 @@ Page({
     });
   },
   // 在reset方法后添加导出方法
+  // 修改 exportResult 方法
   exportResult() {
-    const content = `
-  【幸运生成结果】
-  日期：${this.data.dateInfo.solarDate} ${this.data.dateInfo.weekDay}
-  农历：${this.data.dateInfo.lunarDate}
-  祝福：${this.data.blessing}
+    // 过滤有效号码组并重新生成序号
+    const validNumbers = this.data.numbers
+      .filter(item => this.data.selectedMode !== 1 || item.multiplier > 0)
+      .map((item, index) => ({
+        ...item,
+        displayIndex: index + 1
+      }));
+    
+    let exportText = `【${this.data.lotteryTypes[this.data.selectedType]}】\n`;
+    exportText += `日期：${this.data.dateInfo.solarDate} ${this.data.dateInfo.weekDay}\n`;  // 恢复星期显示
+    exportText += `农历：${this.data.dateInfo.lunarDate}\n`;
+    exportText += `祝福：${this.data.blessing}\n\n`;  // 添加祝福语
+    
+    validNumbers.forEach(item => {
+      exportText += `第${item.displayIndex}组：${item.redBalls.join(' ')} + ${item.blueBalls.join(' ')}`;
+      if (this.data.selectedMode === 1) {
+        exportText += ` ×${item.multiplier}倍`;
+      }
+      exportText += '\n';
+    });
   
-  ${this.data.numbers.map((item, index) => 
-    `第${index + 1}组：${item.redBalls.join(' ')} + ${item.blueBalls.join(' ')}` + 
-    (this.data.selectedMode === 1 ? ` ×${item.multiplier}` : '')
-  ).join('\n')}
-      `.trim();
-  
-      wx.setClipboardData({
-        data: content,
-        success: () => {
-          wx.showToast({
-            title: '已复制到剪贴板',
-            icon: 'success'
-          });
-        },
-        fail: (err) => {
-          console.error('复制失败:', err);
-          wx.showToast({
-            title: '复制失败',
-            icon: 'error'
-          });
-        }
-      });
-    },
+    // 替换旧的content生成逻辑
+    wx.setClipboardData({
+      data: exportText.trim(),  // 使用trim()去除首尾空白
+      success: () => {
+        wx.showToast({
+          title: '已复制到剪贴板',
+          icon: 'success'
+        });
+      },
+      fail: (err) => {
+        console.error('复制失败:', err);
+        wx.showToast({
+          title: '复制失败',
+          icon: 'error'
+        });
+      }
+    });
+  },
 });

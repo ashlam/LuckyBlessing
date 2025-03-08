@@ -1,0 +1,19 @@
+// 计算实际显示序号
+function getFilteredIndex(array, indexStr, selectedModeStr) {
+  // 参数类型转换
+  var index = parseInt(indexStr);
+  var selectedMode = parseInt(selectedModeStr);
+  var count = 0;
+  
+  for (var i = 0; i <= index; i++) {
+    var item = array[i] || {};
+    if (selectedMode !== 1 || item.multiplier > 0) {
+      count++;
+    }
+  }
+  return count;
+}
+
+module.exports = {
+  getFilteredIndex: getFilteredIndex
+};

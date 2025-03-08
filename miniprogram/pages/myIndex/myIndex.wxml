@@ -27,11 +27,14 @@
       <view class="week-day">{{dateInfo.weekDay}}</view>
       <view class="lunar-date">{{dateInfo.lunarDate}}</view>
     </view>
-    <view class="numbers" wx:if="{{isGenerated}}"> <!-- 添加条件渲染 -->
-      <!-- 在号码显示部分添加倍数 -->
+    <!-- 在文件最顶部添加wxs引用 -->
+    <wxs module="filter" src="./filter.wxs"></wxs>
+    
+    <!-- 修改号码显示部分 -->
+    <view class="numbers" wx:if="{{isGenerated}}">
       <block wx:for="{{numbers}}" wx:key="index">
-        <view>
-          第 {{index + 1}} 组:
+        <view wx:if="{{selectedMode !== 1 || item.multiplier > 0}}">
+          <text>第 {{filter.getFilteredIndex(numbers, index, selectedMode)}} 组：</text>
           <block wx:for="{{item.redBalls}}" wx:key="index">
             <text style="color: red;">{{item}} </text>
           </block>

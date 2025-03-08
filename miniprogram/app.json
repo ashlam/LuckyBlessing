@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/startPage/startPage",
     "pages/myIndex/myIndex"
   ]
 }
